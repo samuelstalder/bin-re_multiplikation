@@ -1,0 +1,232 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;* -----------------------------------------------------
+                       -------------
+    2 00000000         ;* --  _____       ______  _____                        
+                                   -
+    3 00000000         ;* -- |_   _|     |  ____|/ ____|                       
+                                   -
+    4 00000000         ;* --   | |  _ __ | |__  | (___    Institute of Embedded
+                        Systems    -
+    5 00000000         ;* --   | | | '_ \|  __|  \___ \   Zurich University of 
+                                   -
+    6 00000000         ;* --  _| |_| | | | |____ ____) |  Applied Sciences     
+                                   -
+    7 00000000         ;* -- |_____|_| |_|______|_____/   8401 Winterthur, Swit
+                       zerland     -
+    8 00000000         ;* -----------------------------------------------------
+                       -------------
+    9 00000000         ;* --
+   10 00000000         ;* -- Project     : CT1 - Lab 9
+   11 00000000         ;* -- Description : Multiplication and division
+   12 00000000         ;* -- 
+   13 00000000         ;* -- $Id: main.s 3775 2016-11-14 08:13:44Z kesr $
+   14 00000000         ;* -----------------------------------------------------
+                       -------------
+   15 00000000         
+   16 00000000         
+   17 00000000         ; ------------------------------------------------------
+                       -------------
+   18 00000000         ; -- Constants
+   19 00000000         ; ------------------------------------------------------
+                       -------------
+   20 00000000         
+   21 00000000                 AREA             myCode, CODE, READONLY
+   22 00000000         
+   23 00000000                 THUMB
+   24 00000000         
+   25 00000000 60000210 
+                       ADR_BUTTONS
+                               EQU              0x60000210
+   26 00000000 60000300 
+                       ADDR_LCD_ASCII
+                               EQU              0x60000300
+   27 00000000         
+   28 00000000         ; ------------------------------------------------------
+                       -------------
+   29 00000000         ; -- Main
+   30 00000000         ; ------------------------------------------------------
+                       -------------   
+   31 00000000         
+   32 00000000         main    PROC
+   33 00000000                 EXPORT           main
+   34 00000000                 IMPORT           mul_u16
+   35 00000000                 IMPORT           mul_s16
+   36 00000000                 IMPORT           mul_u32
+   37 00000000         
+   38 00000000 4808    wait_for_button
+                               LDR              R0, =ADR_BUTTONS ; Read buttons
+                                                            
+   39 00000002 7801            LDRB             R1, [R0]
+   40 00000004 4808            LDR              R0, =mul_u16
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   41 00000006 0849            LSRS             R1, #1      ; Test for T0
+   42 00000008 D205            BCS              load_proc   ; and branch if pre
+                                                            ssed
+   43 0000000A 4808            LDR              R0, =mul_s16
+   44 0000000C 0849            LSRS             R1, #1      ; Test for T1
+   45 0000000E D202            BCS              load_proc   ; and branch if pre
+                                                            ssed
+   46 00000010 4807            LDR              R0, =mul_u32
+   47 00000012 0849            LSRS             R1, #1      ; Test for T2
+   48 00000014 D300            BCC              next        ; and branch if pre
+                                                            ssed
+   49 00000016 4780    load_proc
+                               BLX              R0
+   50 00000018 E7F2    next    B                wait_for_button ; Wait for next
+                                                             button
+   51 0000001A         
+   52 0000001A                 ENDP
+   53 0000001A         
+   54 0000001A         display_char
+                               PROC
+   55 0000001A                 EXPORT           display_char
+   56 0000001A B503            PUSH             {R0, R1, LR}
+   57 0000001C 4805            LDR              R0, =ADDR_LCD_ASCII ; load ASCI
+                                                            I register address
+   58 0000001E 4906            LDR              R1, =0
+   59 00000020 52C2            STRH             R2, [R0, R3]
+   60 00000022 BD03            POP              {R0, R1, PC}
+   61 00000024         
+   62 00000024                 ENDP
+   63 00000024         ; ------------------------------------------------------
+                       -------------
+   64 00000024         ; -- End of file
+   65 00000024         ; ------------------------------------------------------
+                       ------------- 
+   66 00000024                 ALIGN
+   67 00000024                 END
+              60000210 
+              00000000 
+              00000000 
+              00000000 
+              60000300 
+              00000000 
+Command Line: --16 --debug --xref --diag_suppress=9931 --cpu=Cortex-M0 --apcs=i
+nterwork --depend=.\build\main.d -o.\build\main.o -I.\RTE\_Target_1 -IC:\Users\
+joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\Device\Include -IC:\User
+s\joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\Device\Include\m0 -IC:
+\Users\joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\HAL\Include -IC:\
+Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VE
+RSION SETA 531" --predefine="_RTE_ SETA 1" --predefine="_RTE_ SETA 1" --list=.\
+build\main.lst app\main.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+display_char 0000001A
+
+Symbol: display_char
+   Definitions
+      At line 54 in file app\main.s
+   Uses
+      At line 55 in file app\main.s
+Comment: display_char used once
+load_proc 00000016
+
+Symbol: load_proc
+   Definitions
+      At line 49 in file app\main.s
+   Uses
+      At line 42 in file app\main.s
+      At line 45 in file app\main.s
+
+main 00000000
+
+Symbol: main
+   Definitions
+      At line 32 in file app\main.s
+   Uses
+      At line 33 in file app\main.s
+Comment: main used once
+myCode 00000000
+
+Symbol: myCode
+   Definitions
+      At line 21 in file app\main.s
+   Uses
+      None
+Comment: myCode unused
+next 00000018
+
+Symbol: next
+   Definitions
+      At line 50 in file app\main.s
+   Uses
+      At line 48 in file app\main.s
+Comment: next used once
+wait_for_button 00000000
+
+Symbol: wait_for_button
+   Definitions
+      At line 38 in file app\main.s
+   Uses
+      At line 50 in file app\main.s
+Comment: wait_for_button used once
+6 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+ADDR_LCD_ASCII 60000300
+
+Symbol: ADDR_LCD_ASCII
+   Definitions
+      At line 26 in file app\main.s
+   Uses
+      At line 57 in file app\main.s
+Comment: ADDR_LCD_ASCII used once
+ADR_BUTTONS 60000210
+
+Symbol: ADR_BUTTONS
+   Definitions
+      At line 25 in file app\main.s
+   Uses
+      At line 38 in file app\main.s
+Comment: ADR_BUTTONS used once
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+mul_s16 00000000
+
+Symbol: mul_s16
+   Definitions
+      At line 35 in file app\main.s
+   Uses
+      At line 43 in file app\main.s
+Comment: mul_s16 used once
+mul_u16 00000000
+
+Symbol: mul_u16
+   Definitions
+      At line 34 in file app\main.s
+   Uses
+      At line 40 in file app\main.s
+Comment: mul_u16 used once
+mul_u32 00000000
+
+Symbol: mul_u32
+   Definitions
+      At line 36 in file app\main.s
+   Uses
+      At line 46 in file app\main.s
+Comment: mul_u32 used once
+3 symbols
+346 symbols in table

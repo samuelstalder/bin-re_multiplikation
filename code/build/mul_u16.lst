@@ -1,0 +1,578 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;* -----------------------------------------------------
+                       -------------
+    2 00000000         ;* --  _____       ______  _____                        
+                                   -
+    3 00000000         ;* -- |_   _|     |  ____|/ ____|                       
+                                   -
+    4 00000000         ;* --   | |  _ __ | |__  | (___    Institute of Embedded
+                        Systems    -
+    5 00000000         ;* --   | | | '_ \|  __|  \___ \   Zurich University of 
+                                   -
+    6 00000000         ;* --  _| |_| | | | |____ ____) |  Applied Sciences     
+                                   -
+    7 00000000         ;* -- |_____|_| |_|______|_____/   8401 Winterthur, Swit
+                       zerland     -
+    8 00000000         ;* -----------------------------------------------------
+                       -------------
+    9 00000000         ;* --
+   10 00000000         ;* -- Project     : CT1 - Lab 9
+   11 00000000         ;* -- Description : Multiplication 16 bit unsigned
+   12 00000000         ;* -- 
+   13 00000000         ;* -- $Id: mul_u16.s 3776 2016-11-14 11:35:26Z kesr $
+   14 00000000         ;* -----------------------------------------------------
+                       -------------
+   15 00000000         
+   16 00000000         
+   17 00000000         ; ------------------------------------------------------
+                       -------------
+   18 00000000         ; -- Constants
+   19 00000000         ; ------------------------------------------------------
+                       -------------
+   20 00000000         
+   21 00000000                 AREA             myCode, CODE, READONLY
+   22 00000000         
+   23 00000000                 THUMB
+   24 00000000         
+   25 00000000 00000008 
+                       NR_OF_TESTS
+                               EQU              8
+   26 00000000         
+   27 00000000 60000100 
+                       ADR_LED EQU              0x60000100
+   28 00000000 60000110 
+                       ADR_7SEG
+                               EQU              0x60000110
+   29 00000000 00000001 
+                       ADR_LCD_STEP
+                               EQU              0x1
+   30 00000000         
+   31 00000000 8E88F9C7 
+                       MSG_FAIL
+                               EQU              0x8e88f9c7
+   32 00000000 8C889292 
+                       MSG_PASS
+                               EQU              0x8c889292
+   33 00000000         
+   34 00000000         
+   35 00000000         ; ------------------------------------------------------
+                       -------------
+   36 00000000         ; -- Main
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   37 00000000         ; ------------------------------------------------------
+                       -------------   
+   38 00000000         
+   39 00000000         
+   40 00000000         mul_u16 PROC
+   41 00000000                 EXPORT           mul_u16
+   42 00000000                 IMPORT           display_char
+   43 00000000         
+   44 00000000 B500            PUSH             {LR}
+   45 00000002         
+   46 00000002         ; Set LCD "mul_u16"
+   47 00000002 4B24    LCD_set LDR              R3, =0x0
+   48 00000004 4824            LDR              R0, =display_char
+   49 00000006 4A25            LDR              R2, =0x006D
+   50 00000008 4780            BLX              R0
+   51 0000000A 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   52 0000000C 4A24            LDR              R2, =0x0175
+   53 0000000E 4780            BLX              R0
+   54 00000010 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   55 00000012 4A24            LDR              R2, =0x026C
+   56 00000014 4780            BLX              R0
+   57 00000016 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   58 00000018 4A23            LDR              R2, =0x035F
+   59 0000001A 4780            BLX              R0
+   60 0000001C 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   61 0000001E 4A23            LDR              R2, =0x0475
+   62 00000020 4780            BLX              R0
+   63 00000022 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   64 00000024 4A22            LDR              R2, =0x0531
+   65 00000026 4780            BLX              R0
+   66 00000028 1C5B            ADDS             R3, R3, #ADR_LCD_STEP
+   67 0000002A 4A22            LDR              R2, =0x0636
+   68 0000002C 4780            BLX              R0
+   69 0000002E         
+   70 0000002E         ; Set up unit test
+   71 0000002E 4819    init_test
+                               LDR              R0, =0      ; Index of testrun
+   72 00000030 4918            LDR              R1, =0      ; Fail mask
+   73 00000032 4A21            LDR              R2, =ADR_7SEG ; Clear 7-segment
+                                                             display
+   74 00000034 4B21            LDR              R3, =0xffffffff
+   75 00000036 6013            STR              R3, [R2]
+   76 00000038         
+   77 00000038 0040    exec_operation
+                               LSLS             R0, #1      ; Shift index left 
+                                                            for halfword access
+                                                            
+   78 0000003A 4A21            LDR              R2, =op1_table ; Load operands 
+                                                            in registers R6, R7
+                                                                   
+   79 0000003C 5A16            LDRH             R6, [R2, R0]
+   80 0000003E 4A21            LDR              R2, =op2_table
+   81 00000040 5A17            LDRH             R7, [R2, R0]
+   82 00000042 F000 F819       BL               operation   ; Branch to label w
+                                                            ith return address 
+                                                            (LR)
+   83 00000046         
+   84 00000046 0040    store_result
+                               LSLS             R0, #1      ; Shift index left 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+                                                            (again) for word ac
+                                                            cess
+   85 00000048 4A1F            LDR              R2, =result_table
+   86 0000004A 5017            STR              R7, [R2, R0]
+   87 0000004C         
+   88 0000004C 4A1F    verify_result
+                               LDR              R2, =golden_table
+   89 0000004E 5813            LDR              R3, [R2, R0]
+   90 00000050 0880            LSRS             R0, #2      ; Shift index back 
+                                                            to original "positi
+                                                            on"
+   91 00000052 42BB            CMP              R3, R7
+   92 00000054 D002            BEQ              inc_test    ; Branch to inc_tes
+                                                            t if result correct
+                                                            
+   93 00000056 4A1E            LDR              R2, =1      ; Set bit at positi
+                                                            on of failed test
+   94 00000058 4082            LSLS             R2, R0
+   95 0000005A 4311            ORRS             R1, R2
+   96 0000005C         
+   97 0000005C 3001    inc_test
+                               ADDS             R0, #1
+   98 0000005E 4A1D            LDR              R2, =NR_OF_TESTS
+   99 00000060 4290            CMP              R0, R2
+  100 00000062 D1E9            BNE              exec_operation
+  101 00000064         
+  102 00000064 4A14    displ_results
+                               LDR              R2, =ADR_7SEG
+  103 00000066 4B1C            LDR              R3, =MSG_FAIL
+  104 00000068 4C0A            LDR              R4, =0
+  105 0000006A 42A1            CMP              R1, R4
+  106 0000006C D100            BNE              displ_message ; Fail
+  107 0000006E 4B1B            LDR              R3, =MSG_PASS ; Pass
+  108 00000070 6013    displ_message
+                               STR              R3, [R2]
+  109 00000072 4A1B            LDR              R2, =ADR_LED ; Display which ru
+                                                            ns failed
+  110 00000074 6011            STR              R1, [R2]
+  111 00000076         
+  112 00000076 BD00            POP              {PC}
+  113 00000078         
+  114 00000078         
+  115 00000078         ; 16 bit multiplication
+  116 00000078         ; - multiplier in R6
+  117 00000078         ; - multiplicand in R7
+  118 00000078         ; - 32 bit result in R7
+  119 00000078         ; 10111 * 1001010 = 
+  120 00000078 B53F    operation
+                               PUSH             {R0-R5, LR}
+  121 0000007A         
+  122 0000007A         ; STUDENTS: To be programmed
+  123 0000007A 2000            MOVS             R0, #0      ; Zwischenresultat 
+                                                            in R0
+  124 0000007C 2100            MOVS             R1, #0      ; Counter für schle
+                                                            ife und shift
+  125 0000007E         start_loop
+  126 0000007E         
+  127 0000007E 0876            LSRS             R6, R6, #1
+  128 00000080 D302            BCC              end_add
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  129 00000082 003C            MOVS             R4, R7
+  130 00000084 408C            LSLS             R4, R4, R1  ; Shift R7 into R4,
+                                                             R1 times
+  131 00000086 1900            ADDS             R0, R4      ; Add shifted to zw
+                                                            ischenresultat
+  132 00000088         end_add
+  133 00000088 3101            ADDS             R1, #1
+  134 0000008A 2910            CMP              R1, #16     ; test für schleife
+                                                            
+  135 0000008C D1F7            BNE              start_loop
+  136 0000008E         end_loop
+  137 0000008E 0007            MOVS             R7, R0
+  138 00000090         ; END: To be programmed
+  139 00000090         
+  140 00000090 BD3F            POP              {R0-R5, PC} ; Return to main
+  141 00000092         
+  142 00000092                 ENDP
+  143 00000092         
+  144 00000092         
+  145 00000092         ; ------------------------------------------------------
+                       -------------
+  146 00000092         ; -- Variables
+  147 00000092         ; ------------------------------------------------------
+                       -------------
+  148 00000092 00 00           ALIGN
+  149 00000094 00000000 
+              00000000 
+              0000006D 
+              00000175 
+              0000026C 
+              0000035F 
+              00000475 
+              00000531 
+              00000636 
+              60000110 
+              FFFFFFFF 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000001 
+              00000008 
+              8E88F9C7 
+              8C889292 
+              60000100         AREA             myConstants, DATA, READONLY
+  150 00000000         
+  151 00000000 01 00 17 
+              00 FF FF 
+              A4 73 CC 
+              43 72 E3 
+              22 DD FF 
+              7F       op1_table
+                               DCW              0x0001, 0x0017, 0xffff, 0x73a4,
+ 0x43cc, 0xe372, 0xdd22, 0x7fff
+  152 00000010 FF FF 4A 
+              00 FF FF 
+              28 4C BF 
+              C3 34 02 
+              DE BC FF 
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+              7F       op2_table
+                               DCW              0xffff, 0x004a, 0xffff, 0x4c28,
+ 0xc3bf, 0x0234, 0xbcde, 0x7fff
+  153 00000020         
+  154 00000020 0000FFFF 
+              000006A6 
+              FFFE0001 
+              2266C1A0 golden_table
+                               DCD              0x0000ffff, 0x000006a6, 0xfffe0
+001, 0x2266c1a0
+  155 00000030 33D6F934 
+              01F51728 
+              A324BB7C 
+              3FFF0001         DCD              0x33d6f934, 0x01f51728, 0xa324b
+b7c, 0x3fff0001
+  156 00000040         
+  157 00000040         
+  158 00000040                 AREA             myVars, DATA, READWRITE
+  159 00000000         
+  160 00000000 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    result_table
+                               SPACE            8*4         ; Reserve 8 words o
+                                                            f memory
+  161 00000020         
+  162 00000020         
+  163 00000020         ; ------------------------------------------------------
+                       -------------
+  164 00000020         ; -- End of file
+  165 00000020         ; ------------------------------------------------------
+                       -------------                      
+  166 00000020                 END
+Command Line: --16 --debug --xref --diag_suppress=9931 --cpu=Cortex-M0 --apcs=i
+nterwork --depend=.\build\mul_u16.d -o.\build\mul_u16.o -I.\RTE\_Target_1 -IC:\
+Users\joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\Device\Include -IC
+:\Users\joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\Device\Include\m
+0 -IC:\Users\joelp\AppData\Local\Arm\Packs\InES\CTBoard14_DFP\4.0.2\HAL\Include
+ -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --predefine="__UVIS
+ION_VERSION SETA 531" --predefine="_RTE_ SETA 1" --predefine="_RTE_ SETA 1" --l
+ist=.\build\mul_u16.lst app\mul_u16.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+LCD_set 00000002
+
+Symbol: LCD_set
+   Definitions
+      At line 47 in file app\mul_u16.s
+   Uses
+      None
+Comment: LCD_set unused
+displ_message 00000070
+
+Symbol: displ_message
+   Definitions
+      At line 108 in file app\mul_u16.s
+   Uses
+      At line 106 in file app\mul_u16.s
+Comment: displ_message used once
+displ_results 00000064
+
+Symbol: displ_results
+   Definitions
+      At line 102 in file app\mul_u16.s
+   Uses
+      None
+Comment: displ_results unused
+end_add 00000088
+
+Symbol: end_add
+   Definitions
+      At line 132 in file app\mul_u16.s
+   Uses
+      At line 128 in file app\mul_u16.s
+Comment: end_add used once
+end_loop 0000008E
+
+Symbol: end_loop
+   Definitions
+      At line 136 in file app\mul_u16.s
+   Uses
+      None
+Comment: end_loop unused
+exec_operation 00000038
+
+Symbol: exec_operation
+   Definitions
+      At line 77 in file app\mul_u16.s
+   Uses
+      At line 100 in file app\mul_u16.s
+Comment: exec_operation used once
+inc_test 0000005C
+
+Symbol: inc_test
+   Definitions
+      At line 97 in file app\mul_u16.s
+   Uses
+      At line 92 in file app\mul_u16.s
+Comment: inc_test used once
+init_test 0000002E
+
+Symbol: init_test
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+   Definitions
+      At line 71 in file app\mul_u16.s
+   Uses
+      None
+Comment: init_test unused
+mul_u16 00000000
+
+Symbol: mul_u16
+   Definitions
+      At line 40 in file app\mul_u16.s
+   Uses
+      At line 41 in file app\mul_u16.s
+Comment: mul_u16 used once
+myCode 00000000
+
+Symbol: myCode
+   Definitions
+      At line 21 in file app\mul_u16.s
+   Uses
+      None
+Comment: myCode unused
+operation 00000078
+
+Symbol: operation
+   Definitions
+      At line 120 in file app\mul_u16.s
+   Uses
+      At line 82 in file app\mul_u16.s
+Comment: operation used once
+start_loop 0000007E
+
+Symbol: start_loop
+   Definitions
+      At line 125 in file app\mul_u16.s
+   Uses
+      At line 135 in file app\mul_u16.s
+Comment: start_loop used once
+store_result 00000046
+
+Symbol: store_result
+   Definitions
+      At line 84 in file app\mul_u16.s
+   Uses
+      None
+Comment: store_result unused
+verify_result 0000004C
+
+Symbol: verify_result
+   Definitions
+      At line 88 in file app\mul_u16.s
+   Uses
+      None
+Comment: verify_result unused
+14 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+golden_table 00000020
+
+Symbol: golden_table
+   Definitions
+      At line 154 in file app\mul_u16.s
+   Uses
+      At line 88 in file app\mul_u16.s
+Comment: golden_table used once
+myConstants 00000000
+
+Symbol: myConstants
+   Definitions
+      At line 149 in file app\mul_u16.s
+   Uses
+      None
+Comment: myConstants unused
+op1_table 00000000
+
+Symbol: op1_table
+   Definitions
+      At line 151 in file app\mul_u16.s
+   Uses
+      At line 78 in file app\mul_u16.s
+Comment: op1_table used once
+op2_table 00000010
+
+Symbol: op2_table
+   Definitions
+      At line 152 in file app\mul_u16.s
+   Uses
+      At line 80 in file app\mul_u16.s
+Comment: op2_table used once
+4 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+myVars 00000000
+
+Symbol: myVars
+   Definitions
+      At line 158 in file app\mul_u16.s
+   Uses
+      None
+Comment: myVars unused
+result_table 00000000
+
+Symbol: result_table
+   Definitions
+      At line 160 in file app\mul_u16.s
+   Uses
+      At line 85 in file app\mul_u16.s
+Comment: result_table used once
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+ADR_7SEG 60000110
+
+Symbol: ADR_7SEG
+   Definitions
+      At line 28 in file app\mul_u16.s
+   Uses
+      At line 73 in file app\mul_u16.s
+      At line 102 in file app\mul_u16.s
+
+ADR_LCD_STEP 00000001
+
+Symbol: ADR_LCD_STEP
+   Definitions
+      At line 29 in file app\mul_u16.s
+   Uses
+      At line 51 in file app\mul_u16.s
+      At line 54 in file app\mul_u16.s
+      At line 57 in file app\mul_u16.s
+      At line 60 in file app\mul_u16.s
+      At line 63 in file app\mul_u16.s
+      At line 66 in file app\mul_u16.s
+
+ADR_LED 60000100
+
+Symbol: ADR_LED
+   Definitions
+      At line 27 in file app\mul_u16.s
+   Uses
+      At line 109 in file app\mul_u16.s
+Comment: ADR_LED used once
+MSG_FAIL 8E88F9C7
+
+Symbol: MSG_FAIL
+   Definitions
+      At line 31 in file app\mul_u16.s
+   Uses
+      At line 103 in file app\mul_u16.s
+Comment: MSG_FAIL used once
+MSG_PASS 8C889292
+
+Symbol: MSG_PASS
+   Definitions
+      At line 32 in file app\mul_u16.s
+   Uses
+      At line 107 in file app\mul_u16.s
+Comment: MSG_PASS used once
+NR_OF_TESTS 00000008
+
+Symbol: NR_OF_TESTS
+   Definitions
+      At line 25 in file app\mul_u16.s
+   Uses
+      At line 98 in file app\mul_u16.s
+Comment: NR_OF_TESTS used once
+6 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+display_char 00000000
+
+Symbol: display_char
+   Definitions
+      At line 42 in file app\mul_u16.s
+   Uses
+      At line 48 in file app\mul_u16.s
+Comment: display_char used once
+1 symbol
+362 symbols in table
